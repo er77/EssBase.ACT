@@ -1,3 +1,5 @@
+It is VBA project contain plugin for Oracle SmartView. It is help to orgonise workflow, calculation and reporting task.  
+
 Installation   process  http://essbase.ru/archives/8119 
 
 How to change XLAM VBA project http://essbase.ru/archives/wiki/sv-ribbon-create-self
