@@ -1,6 +1,6 @@
 It is VBA project contain plugin for Oracle SmartView. It is help to orgonise workflow, calculation and reporting task.  
 
-Download with one file 
+Download with one file https://goo.gl/DbbV3G
 
 Installation   process  http://essbase.ru/archives/8119 
 
