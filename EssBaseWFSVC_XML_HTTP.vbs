@@ -110,7 +110,7 @@ function writeCalcStatus  ( )
 	OutStatusCalculation.InnerHTML  = strHTML  
 	getSleepy
     
-    call setButtonOnFinish	
+    call setCalcButtonOnFinish	
 	doHttpOnReadyStateChange=0
 	 if len (vPreviousScriptName) > 0 then 
 	    vGlobalRunnedCSCID=vGlobalRunnedCSCID + 1
@@ -119,11 +119,18 @@ function writeCalcStatus  ( )
 	 end if 
 end function 
 
-sub setButtonOnFinish
+sub setCalcButtonOnFinish
 	runbutton.disabled = false 
     hideCsCbutton.disabled = false
     loadCsCbutton.disabled = false 
 	fScheduleFormName.cscRUN.disabled = false 
+
+	fVariables.btnSetVariables.disabled = true 
+    fVariables.btnHideVariables.disabled = false 
+	fVariables.btnReloadVariables.disabled = false 
+
+	 document.body.style.cursor = "default"
+ 
 end sub 
 
 function getXMLNodeValue (vCurrobjDOMDocument,vNodeAddress)
@@ -132,6 +139,11 @@ function getXMLNodeValue (vCurrobjDOMDocument,vNodeAddress)
 	Set objCurrNode = vCurrobjDOMDocument.selectSingleNode(vNodeAddress)
         getXMLNodeValue = objCurrNode.text 
     set objCurrNode = nothing
+
+		if instr (Ucase(getXMLNodeValue),"ERROR") then 
+		 alert getXMLValue
+		end if 
+
 	On Error  Goto 0 	
 end function
 
@@ -142,12 +154,18 @@ function getXMLtagValue(vCurrobjDOMDocument, XMLTag)
     if err.number <> 0 then 
       makeLogs "mdx error "
       writeXmlToConsole vCurrobjDOMDocument
-    end if        
+    end if   
+		if instr (Ucase(getXMLtagValue),"ERROR") then 
+		 alert getXMLValue
+		end if  	     
 End Function
 
 function getXMLValue (vCurrobjDOMDocument,vNodeAddress)
 	On Error  Resume Next
         getXMLValue = vCurrobjDOMDocument.lastchild.xml 
+		if instr (Ucase(getXMLValue),"ERROR") then 
+		 alert getXMLValue
+		end if  
 	On Error  Goto 0 		
 end function
 
@@ -244,12 +262,17 @@ function getCubeVariablesList ( vURL,vCurrSID,vCurrAppName,vCurrCubeName  )
 	Dim vStr,vStr1,vStr2,vArr
 	vStr = getCubeVariables( vURL,vCurrSID,vCurrAppName,vCurrCubeName  )   
     vArr = split(vStr,"VarNames>")
-    vStr1 = vArr(1)
-    vStr1 = replace(vStr1,"</","")
-    vArr = split(vStr,"VarVals>")
-    vStr2 = vArr(1)
-    vStr2 = replace(vStr2,"</","")
-    getCubeVariablesList = vStr1 & "#" & vStr2
+	if UBound(vArr) = 0 then 
+	  alert vStr
+	  getCubeVariablesList = ""
+	else   	
+		vStr1 = vArr(1)
+		vStr1 = replace(vStr1,"</","")
+		vArr = split(vStr,"VarVals>")
+		vStr2 = vArr(1)
+		vStr2 = replace(vStr2,"</","")
+		getCubeVariablesList = vStr1 & "#" & vStr2
+	end if 
 end function
 
 function getCubeScripts ( vURL,vCurrSID,vCurrAppName,vCurrCubeName  )  

@@ -67,9 +67,9 @@ end sub
 
 function getVariablseForm 
 Dim strHTML
- strHTML= "<div > <table> " '<div style=""height:200px;border:1px ;overflow:auto;""> 
-     vCubeScriptXML = getCubeVariablesList(vConnAps,vAppSID,vConnApp,vConnDb) 
+ vCubeScriptXML = getCubeVariablesList(vConnAps,vAppSID,vConnApp,vConnDb) 
       if ( len(vCubeScriptXML)>5 ) then 
+ strHTML= "  <table  width=""450""> " '< 
           arrRules3 = Split (vCubeScriptXML,"#") 
           arrVariblesValues = Split (arrRules3(1),"|")   
           arrVariblesName = Split (arrRules3(0),"|")  
@@ -86,15 +86,18 @@ Dim strHTML
                 strHTML = strHTML & "</td>  </tr> "                          
             end if             
           Next  
-      end if 
-    getVariablseForm = strHTML & "</table> </div> "  
+     
+    getVariablseForm = strHTML & "</table>   " 
+	 end if  
 end function
 
 sub reloadVariables   
 	On Error  Goto 0   
      OUTVaribleFORM.innerHTML=getVariablseForm 
-     fVariables.btnSetVariables.disabled = false 
-     fVariables.btnHideVariables.disabled = false      
+	 if len ( OUTVaribleFORM.innerHTML) > 10 then 
+       fVariables.btnSetVariables.disabled = false 
+       fVariables.btnHideVariables.disabled = false      
+	 end if   
 end sub
 
 sub hideVariables   
@@ -313,11 +316,17 @@ sub downCSCScrip
      drawScheduleForm   
 END sub 
 
-sub setButtonOnRun 
+sub setCalcButtonOnRun 
 	runbutton.disabled = true
 	hideCsCbutton.disabled = true 
 	loadCsCbutton.disabled = true 
 	fScheduleFormName.cscRUN.disabled = true  
+    fVariables.btnSetVariables.disabled = true 
+    fVariables.btnHideVariables.disabled = true 
+	fVariables.btnReloadVariables.disabled = true 
+   
+    document.body.style.cursor = "wait"
+
 end sub 
 
 sub runCurrentRuleByID (i)
@@ -339,7 +348,7 @@ dim vIsFound
 	 if (vIsFound = 1 ) then 
 	  
 	        call runExpClose          
-            call setButtonOnRun
+            call setCalcButtonOnRun
 			'alert vArrSceduleRules(i)
 			Set objDivID =  document.getElementById("btnRun" & vArrSceduleRules(i)  )                    
 			objDivID.innerHTML = objDivID.innerHTML  & "  <div class=""description"">  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp  Started : &nbsp &nbsp"  & Time &  "</div>  "  ' <div class=""item"">  <div class=""content"">
@@ -381,7 +390,7 @@ sub runCalcLaunch
 			call getLoginSID (vGlobalCubeID) 			 
 
             call runExpClose          
-            call setButtonOnRun
+            call setCalcButtonOnRun
 			Set objDivID =  document.getElementById("btnRun" & strAttr(2)  )                    
 			objDivID.innerHTML = objDivID.innerHTML  & "  <div class=""description"">  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp  Started : &nbsp &nbsp"  & Time &  "</div>  "  ' <div class=""item"">  <div class=""content"">
 			runStatus.InnerHTML = "<div class=""description"">  " & strAttr(2)&" have started at " & Time &  "</div>  "  ' <div class=""item"">  <div class=""content"">    
@@ -416,7 +425,7 @@ Dim strHTML
         strHTML = strHTML &  " <div class=""ui list""> <div class=""item""> <i class=""folder icon""></i> <div class=""content""> <div class=""header"">" &  lcase(vConnApp & "." & vConnDb) & "</div> "    
             strHTML = strHTML &  " <div class=""list""> <div class=""item""> <i class=""folder icon""></i>  <div class=""content""> <div class=""header""> Variables</div> "                                       
                  strHTML = strHTML & "<form class=""span6"" id=fVariables > "    
-                    strHTML = strHTML & "<div id=""OUTVaribleFORM""  style=""height:150px;border:1px ;overflow:auto;""  >" &  "</div>"   'getVariablseForm & 
+                    strHTML = strHTML & "<div id=""OUTVaribleFORM""  style=""height:150px;border:1px ;overflow-y: auto;overflow-x: hidden;""  >" &  "</div>"   'getVariablseForm & 
 					strHTML = strHTML & "<br>"  
                     strHTML = strHTML & "<input  style=""width: 75px;"" class=""mini ui button"" id=btnSetVariables    type=""button"" value=""set"" onClick=""vbscript:setSubsVariables"">"
                     strHTML = strHTML & "<input  style=""width: 75px;"" class=""mini ui button"" id=btnReloadVariables type=""button"" value=""load"" onClick=""vbscript:reloadVariables"">"
@@ -427,7 +436,7 @@ Dim strHTML
             strHTML = strHTML & " <div class=""list""> <div class=""item""> <i class=""folder icon""></i>  <div class=""content""> <div class=""header""> Calculations</div> "                                 
                 strHTML = strHTML & "<div class=""ui form"">"
                     strHTML = strHTML & "<div class=""grouped fields"">"'                                      
-                        strHTML = strHTML & "<div id=""OUTScriptsFORM""  style=""height:300px;width:500px;border:1px ;overflow:auto;""  align=""left""></div>"
+                        strHTML = strHTML & "<div id=""OUTScriptsFORM""  style=""height:300px;width:500px;border:1px ;overflow-y: auto;overflow-x: hidden;""  align=""left""></div>"
  						strHTML = strHTML & "<br>"
 						strHTML = strHTML & "<div style=""height: 5px;""> </div>"
                         strHTML = strHTML & "<input style=""width: 75px;"" id=loadCsCbutton class=""mini ui button"" type=""button"" value=""load"" name=""set_calc""  onClick=""vbscript:setCSCScripsForm""> "                         
