@@ -1,19 +1,30 @@
+Sub DoNothing
+	 doevents
+End Sub
+
 Sub doSleep( vTime  )
   If Not IsNumeric(vTime ) Then _
        Exit Sub
+ Dim dteStart,dteEnd
+    dteStart = Time()
+	dteEnd = DateAdd("s", vTime, dteStart)
+ 
+	While dteEnd > Time()
+		DoNothing
+	Wend
 
-set WScriptShell = CreateObject("WScript.Shell")
-  call WScriptShell.Run ("%COMSPEC% /c ping -n 1 -w " & vTime * 1000 & " 127.255.255.254 > nul", WshHide, WAIT_ON_RETURN)  
 end Sub
+
+
+
 
 Sub getSleepy
 	 doSleep 0.01 
 End Sub 
 
 sub myEcho  (LogMessage )
-Dim objWScript
-    Set objWScript = CreateObject("WScript.Shell")
-  objWScript.Echo   LogMessage
+Dim objWScript   
+  objWScriptShell.Echo   LogMessage
 end sub
 
 sub writeConole  (LogMessage ) 
@@ -28,26 +39,24 @@ next
 end Sub 
 
 
-function getCookieFile 
-    Dim objFolders 
-        Set objFolders = CreateObject("WScript.Shell").SpecialFolders
-        getCookieFile = objFolders("mydocuments") & "\essribon.csc"
-      set objFolders = Nothing    
+function getCookieFile     
+        getCookieFile = objWScriptShell.SpecialFolders("mydocuments") & "\essribon.csc"      
 end function 
 
-function getlogFile 
-    Dim objFolders 
-        Set objFolders = CreateObject("WScript.Shell").SpecialFolders
-        getlogFile = objFolders("mydocuments") & "\essribon.log"
-      set objFolders = Nothing    
+function getSSOFile     
+        getSSOFile = objWScriptShell.SpecialFolders("mydocuments") & "\essribon.sso"      
+end function 
+
+function getlogFile      
+        getlogFile = objWScriptShell.SpecialFolders ("mydocuments") & "\essribon.log"   
 end function 
 
 function getLog
-        Dim objFSO,objFile,vStrFileName
-        Set objFSO=CreateObject("Scripting.FileSystemObject")
+        Dim objFile,vStrFileName
+    
         vStrFileName = getlogFile
-		 if objFSO.FileExists(vStrFileName) then 
-		   set objFile =  objFSO.OpenTextFile(vStrFileName, 1)
+		 if objFileSystemObject.FileExists(vStrFileName) then 
+		   set objFile =  objFileSystemObject.OpenTextFile(vStrFileName, 1)
 			vStrFileName = ""   
 			Do Until objFile.AtEndOfStream				
 					vStrFileName = vStrFileName & objFile.ReadLine 				
@@ -56,7 +65,7 @@ function getLog
 		 else 
 		   vStrFileName = ""      
 		 end if 
-		    set objFSO = Nothing 
+
     getLog =  vStrFileName        
 end function
 
@@ -89,11 +98,11 @@ End sub
 
 sub WriteFileLog (vCurrFileName,vCurrLogMessage )
         Dim objFSO,objFile,vStrFileName
-        Set objFSO=CreateObject("Scripting.FileSystemObject")        
-		 if objFSO.FileExists(vCurrFileName) then 
-		    set objFile =  objFSO.OpenTextFile(vCurrFileName, 8, True)', TristateTrue ) 
+       ' Set objFSO= objFileSystemObject ' CreateObject("Scripting.FileSystemObject")        
+		 if objFileSystemObject.FileExists(vCurrFileName) then 
+		    set objFile =  objFileSystemObject.OpenTextFile(vCurrFileName, 8, True)', TristateTrue ) 
 		 else 
-		    set objFile =  objFSO.CreateTextFile(vCurrFileName,true) 	 
+		    set objFile =  objFileSystemObject.CreateTextFile(vCurrFileName,true) 	 
 		 end if 
 
 		 LogMessage  =  LogMessage & ";" &  getRightTime () 
@@ -102,62 +111,159 @@ sub WriteFileLog (vCurrFileName,vCurrLogMessage )
            objFile.WriteLine LogMessage  
          
             objFile.Close
-            set objFSO = Nothing 
+          
             set objFile = Nothing 
+End sub
+
+sub WriteFileRaw ( vStrFileName,vArrRaw)
+
+        Dim objFile
+ 
+		 if objFileSystemObject.FileExists(vStrFileName) then 
+		     objFileSystemObject.deletefile vStrFileName
+		 end if 
+		 
+         set objFile =  objFileSystemObject.CreateTextFile(vStrFileName,true) 
+
+        For i = 0 To UBound(vArrRaw)
+		 if (len (vArrRaw(i)) > 3 ) then 
+           objFile.WriteLine vArrRaw(i)
+		  end if 
+        Next
+ 
+         objFile.Close      
+        set objFile = Nothing 
 End sub
 
 
 sub WriteCookie
 
-        Dim objFSO,objFile,vStrFileName
-        Set objFSO=CreateObject("Scripting.FileSystemObject")
-        vStrFileName = getCookieFile
-		 if objFSO.FileExists(vStrFileName) then 
-		     objFSO.deletefile vStrFileName
-		 end if 
-		 
-         set objFile =  objFSO.CreateTextFile(vStrFileName,true) 
-
-        For i = 0 To UBound(vArrSceduleRules)
-		 if (len (vArrSceduleRules(i)) > 3 ) then 
-           objFile.WriteLine vArrSceduleRules(i)
-		  end if 
-        Next
- 
-            objFile.Close
-            set objFSO = Nothing 
-            set objFile = Nothing 
+      call WriteFileRaw (getCookieFile,vArrSceduleRules)
+   
 End sub
 
-sub ReadCookie
-    Dim i 
-    Dim vStrFileName  
-		 vStrFileName =  getCookieFile
-		   Dim objFSO,objFile
-        Set objFSO=CreateObject("Scripting.FileSystemObject")
-            
-		 if objFSO.FileExists(vStrFileName) then
-			set objFile = objFSO.OpenTextFile(vStrFileName,1)
-			    For i = 0 To UBound(vArrSceduleRules)
-        			vArrSceduleRules(i) = "" 
-    			Next   
-                i = 0			 
-			Do Until objFile.AtEndOfStream
-				
-				vStrFileName = objFile.ReadLine 
-				if len (vStrFileName) > 3 then 
-				  vArrSceduleRules(i) = vStrFileName  				    
+sub  ReadFileRaw (vStrFileName,vCurrArr,i )      
+	Dim objFile,vCurrStr               
+	i=0 
+		 if objFileSystemObject.FileExists(vStrFileName) then
+			set objFile = objFileSystemObject.OpenTextFile(vStrFileName,1)
+		 For j = 0 To UBound(vCurrArr)
+		    vCurrArr(j)=""				 
+		 next 	
+		   
+			Do Until objFile.AtEndOfStream				
+				vCurrStr = objFile.ReadLine 
+				if len (vCurrStr) > 3 then 
+				  vCurrArr(i) = vCurrStr  				    
 				  i=i+1        
-				end if 
-				
+				end if 				
 			Loop
-				objFile.Close
-                vArrSceduleRulesID = i
+				objFile.Close          			 
+				set objFile = Nothing 	 
+        end if  
+End sub
 
-				set objFSO = Nothing 
-				set objFile = Nothing 
-			call drawScheduleForm	
 
-        end if
+sub  CheckFileDateAndDelete (vStrFileName )      
+	Dim objFile,vCurrStr               
+		 if objFileSystemObject.FileExists(vStrFileName) then
+			set objFile = objFileSystemObject.GetFile(vStrFileName) 'objFileSystemObject.OpenTextFile(vStrFileName,1)
+	         If DateDiff("n", objFile.DateLastModified, Now) > 60 Then
+			    set objFile = Nothing 
+                objFileSystemObject.deletefile vStrFileName
+             End If 			 
+			 set objFile = Nothing 	 
+        end if  
+End sub
 
+
+sub ReadCookie
+	 call ReadFileRaw (getCookieFile,vArrSceduleRules,vArrSceduleRulesID)    
+	 call drawScheduleForm	         
+
+End sub
+
+
+Public Function f_XORDecryption(DataIn  )  
+    Dim lonDataPtr 
+    Dim strDataOut  
+    Dim intXOrValue1  
+    Dim intXOrValue2  
+  
+    For lonDataPtr = 1 To (Len(DataIn) / 2)        
+        intXOrValue1 = CLng("&H" & (Mid(DataIn, (2 * lonDataPtr) - 1, 2)))        
+        intXOrValue2 = Asc(Mid(SecretWord, ((lonDataPtr Mod Len(SecretWord)) + 1), 1))        
+        strDataOut = strDataOut + Chr(intXOrValue1 Xor intXOrValue2)
+    Next  
+   f_XORDecryption = strDataOut   
+End Function
+
+Dim arrConnectionsTMP (100,11)
+
+sub ReadSSO
+   Dim arrCurrConnections (100) 
+   Dim jARR , vSplitRow 
+
+     call CheckFileDateAndDelete (getSSOFile)
+	 call ReadFileRaw (getSSOFile,arrCurrConnections,jARR) ' Dim arrConnections (100,11)  
+     if jARR > 0 then 
+	  for i = 0 to ubound (arrConnections)
+	       arrConnectionsTMP(i,0) = 0 
+		   for j=1 to 10 
+		     arrConnectionsTMP(i,j) = "" 
+		   next 
+	   next  
+
+	   for i = 0 to jARR 
+	      arrCurrConnections(i)=f_XORDecryption(arrCurrConnections(i))
+	      vSplitRow=split ((arrCurrConnections(i)),"`")		  
+		  if ubound(vSplitRow) > 9 then 
+		   for j=0 to ubound(vSplitRow)-1 
+		     arrConnectionsTMP(i,j) = vSplitRow(j)  
+		   next 
+		  end if 
+	   next         
+    end if 
+End sub
+ 
+Public Function f_XOREncryption(DataIn  )  
+    Dim lonDataPtr  
+    Dim strDataOut  
+    Dim temp 
+    Dim tempstring  
+    Dim intXOrValue1  
+    Dim intXOrValue2  
+   
+       For lonDataPtr = 1 To Len(DataIn)
+   
+        intXOrValue1 = Asc(Mid(DataIn, lonDataPtr, 1))   
+         
+        intXOrValue2 = Asc(Mid(SecretWord, ((lonDataPtr Mod Len(SecretWord)) + 1), 1))
+        
+        temp = (intXOrValue1 Xor intXOrValue2)
+        tempstring = Hex(temp)
+        If Len(tempstring) = 1 Then tempstring = "0" & tempstring
+        
+        strDataOut = strDataOut + tempstring
+    Next  
+   f_XOREncryption = strDataOut 
+
+End Function
+ 
+
+sub WriteSSO
+   Dim arrCurrConnections (100) 
+   Dim jARR , vSplitRow 
+        jARR = 0 
+   	   for i = 0 to ubound(arrConnections)
+	      if arrConnections(i,0) > -1 then 
+		   arrCurrConnections(i) = "" 
+		   jARR = jARR + 1 		 
+		   for j=0 to 11
+		     arrCurrConnections(i) = arrCurrConnections(i)  & arrConnections(i,j) & "`"
+		   next 
+		     arrCurrConnections(i) = f_XOREncryption (arrCurrConnections(i))
+		  end if 
+	   next  
+	 call WriteFileRaw (getSSOFile,arrCurrConnections)          
 End sub

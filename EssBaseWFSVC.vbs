@@ -169,7 +169,7 @@ end function
  
 function getScriptsForm 
 Dim strHTML 
-Dim arrRules1,arrRules2 
+Dim arrRules1,arrRules2,j,i 
    strHTML=""
     strHTML = getCubeScripts(vConnAps,vAppSID,vConnApp,vConnDb ) 'vConnApp	'
 	'alert strHTML
@@ -177,20 +177,26 @@ Dim arrRules1,arrRules2
 	if Ubound (arrRules1) < 1 then 
 	 alert strHTML
 	end if 
-    strHTML = "<div  width=""width:600px;border:1px ;overflow:auto;"" ><table> <tr  > <td>" 
+    strHTML = "<div  width=""width:700px;border:1px ;overflow:auto;"" ><table> <tr  > <td  width=""width:280px"">" 
+	i=1 
 	For J = 1 To UBound(arrRules1)
 		arrRules2 = Split(arrRules1(j),"</rule>")
-		if j = 12 or j = 24 then 
+		if i = 12 or i = 24 then 
 		 strHTML = strHTML & "</td><td>&nbsp;&nbsp;  </td><td>"
 		end if 
-		if (instr(ucase(arrRules2(0)),"Z") <> 1 ) and   (instr(ucase(arrRules2(0)),"T") <> 1 )then 
-			strHTML = strHTML & "<div class=""field"">"
-			strHTML = strHTML & "<div class=""ui radio checkbox"">"
-			strHTML = strHTML & "<input type=""radio"" name=""CalcOption"" value=""" & vConnApp & "." &  vConnDb & "." &  arrRules2(0) & """> " & _
-			 " >  &nbsp  &nbsp <a  id=""" & vConnApp &"."& vConnDb &"."& arrRules2(0)  & """  onclick=""vbscript:Call setScheduleForm(window.event.srcelement.id)"" href=""#"" > " & arrRules2(0) & "</a> <div id=""btnRun" & arrRules2(0)  & """ ></div>  "
-			strHTML = strHTML & "</div>"      
-			strHTML = strHTML & "</div>"                     
-		end if                    
+		if ( ( UBound(arrRules1) >1 ) and  instr(ucase(arrRules2(0)),"DEFAULT") = 0 )  then 
+			if ( vScriptFilter = "" or instr(ucase(arrRules2(0)),Ucase(vScriptFilter)) > 0 ) then 
+				if (instr(ucase(arrRules2(0)),"Z") <> 1 ) and   (instr(ucase(arrRules2(0)),"T") <> 1 )then 
+					strHTML = strHTML & "<div class=""field"">"
+					strHTML = strHTML & "<div class=""ui radio checkbox"">"
+					strHTML = strHTML & "<input type=""radio"" name=""CalcOption"" value=""" & vConnApp & "." &  vConnDb & "." &  arrRules2(0) & """> " & _
+					" >  &nbsp  &nbsp <a  id=""" & vConnApp &"."& vConnDb &"."& arrRules2(0)  & """  onclick=""vbscript:Call setScheduleForm(window.event.srcelement.id)"" href=""#"" > " & arrRules2(0) & "</a> <div id=""btnRun" & arrRules2(0)  & """ ></div>  "
+					strHTML = strHTML & "</div>"      
+					strHTML = strHTML & "</div>"   
+					i=i+1                  
+				end if                    
+			end if 	
+		end if 
 	Next 
    getScriptsForm= "</td> </tr> </table> " & strHTML  & " </div>"
     'alert strHTML
@@ -212,8 +218,10 @@ strHTML = 0
   if (strHTML <1 ) then 
 '   alert vArrSceduleRules (0) 
   vArrSceduleRulesID =  vArrSceduleRulesID  + 1   
+     
 
    i = vArrSceduleRulesID
+
    vArrSceduleRules (i) = vCurrScriptName
 
    strHTML=OUTScheduleForm.innerHTML
@@ -592,6 +600,7 @@ END sub
 
 
 Dim arrConnections (100,11)
+Dim vScriptFilter 
 Sub getLoginArray 
 ' maget login parameters from commnad line 
 	Dim strHTML1,strHTML2
@@ -614,6 +623,7 @@ Sub getLoginArray
      'rulyubimir'rulyubimir'http://wedcb786.frmon.danet:13080/aps/SmartView'wedcb785.frmon.danet:1424'Kz1TTCST'Kz1TTCST
 		For i = 0 to (Ubound(arrCommands) ) 
 		arrCurrConnect = split (arrCommands(i),"'") 
+		arrConnections (i,0) = -1  
 		if ( ubound (arrCurrConnect) >4 ) then  
 			arrConnections (i,0) = 0 
 			'alert arrCurrConnect(0)
@@ -627,6 +637,13 @@ Sub getLoginArray
 		next 
 
 	    arrCommands=Split(strHTML2, "|")
+		vScriptFilter =""
+		if ( ubound (arrCommands) >0 ) then 
+		  Dim arrCurRule 
+		   ' alert arrCommands(0)
+		    arrCurRule = split (arrCommands(0),".")
+			vScriptFilter = Left(arrCurRule(ubound(arrCurRule)), 3)
+		end if 
      'BY3TTCST.BY3TTCST.FRC_CALC_TTCST|BY3TTCST.BY3TTCST.ACT_CALC_TTCST
 
         if ( ubound (arrCommands) >0 ) then  
@@ -641,24 +658,55 @@ Sub getLoginArray
 			next 
 			WriteCookie
         end if 
-	' alert arrConnections (0,1)
+	   
 end Sub  
 
 sub getLoginSID (i)
-
+'alert i 
 ' initialisate corrent connection 
- if (0=arrConnections (i,0)) then 
-    
-	arrConnections (i,7) = getSID(arrConnections (i,3),arrConnections (i,1),arrConnections (i,2))
-	
-	arrConnections (i,8) = getSSO(arrConnections (i,3),arrConnections (i,7))
 
-	arrConnections (i,9) = getOpennedApplication(arrConnections (i,3),arrConnections (i,7),arrConnections (i,8) ,arrConnections (i,4),arrConnections (i,5))
-	
-	arrConnections (i,10) = getOpennedCube(arrConnections (i,3),arrConnections (i,7),arrConnections (i,8) ,arrConnections (i,4),arrConnections (i,5),arrConnections (i,6)) 
-	
-	arrConnections (i,0) = 1
-  
+ if (0=arrConnections (i,0)) then 
+
+    ReadSSO
+   
+	Dim isConnectIN,vID 
+    isConnectIN = false 
+	for j=0 to ubound (arrConnectionsTMP)
+	   if (not isConnectIN )  and  (1=arrConnections (j,0)) then 
+	     if ( InSTr(arrConnections (i,2),arrConnectionsTMP (j,2) ) > 0 ) then 
+		 	if ( InSTr(arrConnections (i,3),arrConnectionsTMP (j,3) ) > 0 ) then 
+			  if ( InSTr(arrConnections (i,4),arrConnectionsTMP(j,4) ) > 0 ) then 
+			      if ( InSTr(arrConnections (i,5),arrConnectionsTMP(j,5) ) > 0 ) then 
+				     if ( InSTr(arrConnections (i,6),arrConnectionsTMP(j,6) ) > 0 ) then 
+					    isConnectIN = true 
+						vID = j
+		             end if 
+		           end if 
+		      end if 
+		    end if 
+		 end if    
+	   end if
+	next 
+
+	if isConnectIN then 
+	    arrConnections (i,7) = arrConnectionsTMP (vid,7)
+	 
+		arrConnections (i,8) = arrConnectionsTMP (vid,8)
+
+		arrConnections (i,9) = arrConnectionsTMP (vid,9)
+		
+		arrConnections (i,10) = arrConnectionsTMP (vid,10)				
+	else 
+		
+		arrConnections (i,7) = getSID(arrConnections (i,3),arrConnections (i,1),arrConnections (i,2))
+		
+		arrConnections (i,8) = getSSO(arrConnections (i,3),arrConnections (i,7))
+
+		arrConnections (i,9) = getOpennedApplication(arrConnections (i,3),arrConnections (i,7),arrConnections (i,8) ,arrConnections (i,4),arrConnections (i,5))
+		
+		arrConnections (i,10) = getOpennedCube(arrConnections (i,3),arrConnections (i,7),arrConnections (i,8) ,arrConnections (i,4),arrConnections (i,5),arrConnections (i,6)) 	
+    end if 
+		arrConnections (i,0) = 1
  end if 
 	
 		vConnUser = arrConnections (i,1)
@@ -671,6 +719,7 @@ sub getLoginSID (i)
 		vSVSSO =    arrConnections (i,8)	 
 		vAppSID =   arrConnections (i,9)		 
 		vCubeSID =  arrConnections (i,10) 
+	WriteSSO	
 end Sub
 
 Dim vGlobalCubeID
@@ -725,13 +774,22 @@ Sub pCheckError  (vErrStr )
 	end if 	
 End sub
 
-
+   DIm SecretWord	 
+ 
+dim objFileSystemObject
+dim objWScriptShell
+dim objMSXMLDOMDocument
 Sub window_onLoad 
+     SecretWord = "VerYSecretPa$$vv0rd"
+     Set objFileSystemObject=CreateObject("Scripting.FileSystemObject")
+	 set objWScriptShell = CreateObject("WScript.Shell")
+	 set objMSXMLDOMDocument = CreateObject("MSXML.DOMDocument")
     vIsDeletedRule = false
 	getLoginArray	
 	changeCurrentCube 0,0 
 	setCopyRight
 	ReadCookie
+	
 End Sub
 
 

@@ -10,20 +10,18 @@ function getSVXMLAnswer (vCurrURL,vCurrRequest)
 
 	set objLocalServerXMLHTTP = CreateObject("MSXML2.ServerXMLHTTP")
 	Dim lResolve,lConnect,lSend,lReceive
-	
+	'alert vCurrURL
 	objLocalServerXMLHTTP.open "POST", vCurrURL,false
 	objLocalServerXMLHTTP.setRequestHeader "Content-Type", "text/xml; charset=UTF-8"
 	objLocalServerXMLHTTP.setRequestHeader "Content-Length", Len(vCurrRequest)
 	objLocalServerXMLHTTP.send vCurrRequest
 	
-	Dim objDOMDocument
-	Set objDOMDocument = CreateObject("MSXML.DOMDocument")
-	objDOMDocument.loadXML  Trim(Replace(objLocalServerXMLHTTP.responseXML.xml, vbCrLf, ""))
+ 
+	objMSXMLDOMDocument.loadXML  Trim(Replace(objLocalServerXMLHTTP.responseXML.xml, vbCrLf, ""))
 	
 	set objLocalServerXMLHTTP = nothing 	
 	
-	set getSVXMLAnswer = objDOMDocument 	 
-	set objDOMDocument = nothing 	
+	set getSVXMLAnswer = objMSXMLDOMDocument 	 	
 	
 End Function
 
@@ -39,15 +37,13 @@ function getSVXMLAnswerWhaitToEnd (vCurrURL,vCurrRequest)
 	objSVXMLAnswer.setRequestHeader "Content-Length", Len(vCurrRequest)
 	objSVXMLAnswer.send vCurrRequest
 	
-	Dim objDOMDocument
-	Set objDOMDocument = CreateObject("MSXML.DOMDocument")
-	objDOMDocument.loadXML  Trim(Replace(objSVXMLAnswer.responseXML.xml, vbCrLf, ""))
+	objMSXMLDOMDocument
+	objMSXMLDOMDocument.loadXML  Trim(Replace(objSVXMLAnswer.responseXML.xml, vbCrLf, ""))
 	
 	set objSVXMLAnswer = nothing 	
 	
-	set getSVXMLAnswerWhaitToEnd = objDOMDocument 	 
-	set objDOMDocument = nothing 	
-	
+	set getSVXMLAnswerWhaitToEnd = objMSXMLDOMDocument 	 
+
 End Function
 
 Sub getSVXMLAnswerAsyncCalc (vCurrURL,vCurrRequest,vCurrCalcScriptName,vCurrPreviousScriptName)
@@ -80,14 +76,13 @@ function writeCalcStatus  ( )
 	
 	dim strHTML 
 	strHTML = OutStatusCalculation.InnerHTML  
-	Dim objDOMDocument
-	Set objDOMDocument = CreateObject("MSXML.DOMDocument")
-	objDOMDocument.loadXML  Trim(Replace(objServerXMLHTTPASync.responseXML.xml, vbCrLf, ""))        
+	 
+	objMSXMLDOMDocument.loadXML  Trim(Replace(objServerXMLHTTPASync.responseXML.xml, vbCrLf, ""))        
 	set objServerXMLHTTPASync = nothing 
 	
 	Dim strStatusCalculation
-	strStatusCalculation =  getXMLValue(objDOMDocument,"/vScriptName") 	
-	set objDOMDocument = nothing    
+	strStatusCalculation =  getXMLValue(objMSXMLDOMDocument,"/vScriptName") 	
+   
 	
 	if ( Instr(strStatusCalculation,"11") > 0 ) then                
 		dim strHTML2,objDivID
@@ -97,6 +92,7 @@ function writeCalcStatus  ( )
 		  Set objDivID =  document.getElementById("btnRun" & vCalcCurrScriptName  )
 		 end if   
 		objDivID.innerHTML =  objDivID.innerHTML & "  <div class=""description"">  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp  Finished : "  & Time &  "</div> "  ' <div class=""item"">  <div class=""content"">
+		set objDivID = nothing 
 		runStatus.InnerHTML = ""  
 		if len (vPreviousScriptName) > 0 then 
 		   WriteLog  vCalcCurrScriptName & ";" & " finish"
@@ -107,6 +103,7 @@ function writeCalcStatus  ( )
 		strHTML = strHTML & "<br>" & Time & "  " & vCalcCurrScriptName  & " calc status <BR> " & strStatusCalculation  
 	end if   
 	'alert  strHTML
+	'getSleepy
 	OutStatusCalculation.InnerHTML  = strHTML  
 	getSleepy
     
@@ -337,13 +334,13 @@ function execCalcScriptSync  (vCurrAps,vCurrSID,vCurrDB,vCurrCalcScript)
 	 set XmlResult = getSVXMLAnswerWhaitToEnd(vCurrAps,strHTML)                  
     
 	Dim objDOMDocument
-	Set objDOMDocument = CreateObject("MSXML.DOMDocument")
-	objDOMDocument.loadXML  Trim(Replace(XmlResult.xml, vbCrLf, ""))        
+	 
+	objMSXMLDOMDocument.loadXML  Trim(Replace(XmlResult.xml, vbCrLf, ""))        
     set XmlResult = Nothing
 	
 	Dim strStatusCalculation
 	strStatusCalculation =  getXMLValue(objDOMDocument,"/vScriptName") 	
-	set objDOMDocument = nothing  
+ 
     end if  
 
     if ( instr(Ucase(vCurrCalcScript),Ucase("Default")) =  0  ) then
@@ -382,29 +379,24 @@ function getMdxXmlRaw  (vCurrAps,vCurrSID,vCurrMDXBody)
 				        & "         </preferences> "_				
 						& "   <mdx>" & vCurrMDXBody & "</mdx> " _					
 				& "</req_ExecuteQuery>"	
-    dim XmlResult						   
+     dim XmlResult						   
 	 set getMdxXmlRaw = getSVXMLAnswerWhaitToEnd(vCurrAps,strHTML)                  
-    'writeXmlToConsole XmlResult         		 		 
-	' getMdxXmlRaw	
+
 end function  
 
 function getMDXValue  (vCurrAps,vCurrSID,vCurrMDXBody)
-    dim XmlResult		 		   
-	  set XmlResult = getMdxXmlRaw(vCurrAps,vCurrSID,vCurrMDXBody)                
-    'writeXmlToConsole XmlResult 
-
-	Dim objDOMDocument
-	Set objDOMDocument = CreateObject("MSXML.DOMDocument")
-	objDOMDocument.loadXML  Trim(Replace(XmlResult.xml, vbCrLf, ""))        
-    set XmlResult = Nothing
+     dim XmlResult		 		   
+	 set XmlResult = getMdxXmlRaw(vCurrAps,vCurrSID,vCurrMDXBody)                    
+	 
+	 objMSXMLDOMDocument.loadXML  Trim(Replace(XmlResult.xml, vbCrLf, ""))        
+     set XmlResult = Nothing
 	
 	Dim strStatusCalculation
-	getMDXValue =  getXMLtagValue(objDOMDocument,"vals") 	
+	getMDXValue =  getXMLtagValue(objMSXMLDOMDocument,"vals") 	
 		if len (getMDXValue) < 2 then 
-			getMDXValue ="#err: " &  getXMLNodeValue(objDOMDocument,"/")
-		end if  	
-	set objDOMDocument = nothing 
-	 
+			getMDXValue ="#err: " &  getXMLNodeValue(objMSXMLDOMDocument,"/")
+		end if  	 
+
 end function 
 
 function checkMDXValue  (vCurrAps,vCurrSID,vCurrMDXBody)
